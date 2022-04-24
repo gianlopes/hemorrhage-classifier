@@ -43,14 +43,15 @@ RUN conda install \
         pandas \
         seaborn \
         Pillow \
-        tqdm
+        tqdm \
+        pydicom
         
 RUN conda install pytorch torchvision cpuonly -c pytorch
 
 RUN pip --no-cache-dir install --upgrade \
-        opencv-python-headless
-
-RUN pip install --no-cache-dir pydicom
+        opencv-python-headless && \
+	pip --no-cache-dir install pydicom && \
+    pip --no-cache-dir install torchio
 	
 #start ssh and terminal
 CMD /bin/bash

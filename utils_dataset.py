@@ -132,7 +132,7 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         df_row = self.dataset.iloc[idx]
 
-        dicom_path = self.data_path / 'stage_2_train' / df_row['id']
+        dicom_path = self.data_path / 'stage_2_train' / df_row['ID']
 
         # Ajustando window
         dicom = dcm.dcmread(dicom_path)
