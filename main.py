@@ -24,128 +24,75 @@ def main():
                 ghosting.generate_ghosting]
     artefatos_nomes = ["ringing", "contrast", "blurring", "ruido_gaussiano", "ghosting"]
 
-    num_classes = 3
     img_size = 256
-    dataset_path = "/mnt/nas/GianlucasLopes/NeuralBlack/patientImages/splits"
+    dataset_path = "/mnt/nas/GianlucasLopes/hemorragia/rsna-intracranial-hemorrhage-detection/"
     
     #Treino sem degradação
     path_salvar_modelo = "./resultados/treino_nao_degradadas/"
-    train_test_full(device=device,
-                    epochs = 12,
+    train_test_full(device = device,
+                    epochs = 2,
                     dataset_path = dataset_path,
                     path_salvar_modelo = path_salvar_modelo,
-                    balancear_dataset = False,
-                    shuffle_pacientes_flag = False,
                     img_size = img_size)
-    teste_artefatos(artefatos, artefatos_nomes,
-                    device,
-                    path_salvar_modelo, dataset_path,
-                    img_size, num_classes)
 
-    teste_artefatos(artefatos, artefatos_nomes,
-                    device,
-                    path_salvar_modelo, dataset_path,
-                    img_size, num_classes)
-    
-    teste_artefatos(ringing.generate_ringing, "ringing",
-                    device,
-                    path_salvar_modelo, dataset_path,
-                    img_size, num_classes)
-    
-    teste_artefatos(contrast.generate_contrast, "contrast",
-                    device,
-                    path_salvar_modelo, dataset_path,
-                    img_size, num_classes)
-    
-    teste_artefatos(blurring.generate_blurring, "blurring",
-                    device,
-                    path_salvar_modelo, dataset_path,
-                    img_size, num_classes)
-    
-    teste_artefatos(ruido_gaussiano.generate_ruido_gaussiano, "ruido_gaussiano",
-                    device,
-                    path_salvar_modelo, dataset_path,
-                    img_size, num_classes)
-    
-    teste_artefatos(ghosting.generate_ghosting, "ghosting",
-                    device,
-                    path_salvar_modelo, dataset_path,
-                    img_size, num_classes)
 
+    # teste_artefatos(artefatos, artefatos_nomes,
+    #                 device,
+    #                 path_salvar_modelo, dataset_path,
+    #                 img_size, num_classes)
     
-    #Treino sem degradação com dataset balanceado
-    path_salvar_modelo = "./resultados/treino_nao_degradadas_classes_balanceadas/"
-    train_test_full(device=device,
-                    epochs = 12,
-                    dataset_path = dataset_path,
-                    path_salvar_modelo = path_salvar_modelo,
-                    balancear_dataset = True,
-                    shuffle_pacientes_flag = False,
-                    img_size = img_size)
-    teste_artefatos(artefatos, artefatos_nomes,
-                    device,
-                    path_salvar_modelo, dataset_path,
-                    img_size, num_classes)
+    # teste_artefatos(ringing.generate_ringing, "ringing",
+    #                 device,
+    #                 path_salvar_modelo, dataset_path,
+    #                 img_size, num_classes)
     
-    #Treino sem degradação com pacientes misturados
-    path_salvar_modelo = "./resultados/treino_nao_degradadas_pacientes_misturados/"
-    train_test_full(device=device,
-                    epochs = 12,
-                    dataset_path = dataset_path,
-                    path_salvar_modelo = path_salvar_modelo,
-                    balancear_dataset = False,
-                    shuffle_pacientes_flag = True,
-                    img_size = img_size)
-    teste_artefatos(artefatos, artefatos_nomes,
-                    device,
-                    path_salvar_modelo, dataset_path,
-                    img_size, num_classes)
+    # teste_artefatos(contrast.generate_contrast, "contrast",
+    #                 device,
+    #                 path_salvar_modelo, dataset_path,
+    #                 img_size, num_classes)
+    
+    # teste_artefatos(blurring.generate_blurring, "blurring",
+    #                 device,
+    #                 path_salvar_modelo, dataset_path,
+    #                 img_size, num_classes)
+    
+    # teste_artefatos(ruido_gaussiano.generate_ruido_gaussiano, "ruido_gaussiano",
+    #                 device,
+    #                 path_salvar_modelo, dataset_path,
+    #                 img_size, num_classes)
+    
+    # teste_artefatos(ghosting.generate_ghosting, "ghosting",
+    #                 device,
+    #                 path_salvar_modelo, dataset_path,
+    #                 img_size, num_classes)
 
-    # Treino com artefatos
-    path_salvar_modelo = "./resultados/treino_todos_artefatos/"
-    train_test_full(device=device,
-                    epochs = 12,
-                    dataset_path = dataset_path,
-                    path_salvar_modelo = path_salvar_modelo,
-                    balancear_dataset = False,
-                    shuffle_pacientes_flag = False,
-                    img_size = img_size,
-                    funcao_geradora_artefato=artefatos,
-                    nivel_aleatorio=True,
-                    nivel_aleatorio_teto=10)
-    teste_artefatos(artefatos, artefatos_nomes,
-                    device,
-                    path_salvar_modelo, dataset_path,
-                    img_size, num_classes)
-    
-    # Treino com artefatos com classes balanceadas
-    path_salvar_modelo = "./resultados/treino_todos_artefatos_balanceado/"
-    train_test_full(device=device,
-                    epochs = 12,
-                    dataset_path = dataset_path,
-                    path_salvar_modelo = path_salvar_modelo,
-                    balancear_dataset = True,
-                    shuffle_pacientes_flag = False,
-                    img_size = img_size,
-                    funcao_geradora_artefato=artefatos,
-                    nivel_aleatorio=True,
-                    nivel_aleatorio_teto=10)
-    teste_artefatos(artefatos, artefatos_nomes,
-                    device,
-                    path_salvar_modelo, dataset_path,
-                    img_size, num_classes)
-
+    # # Treino com artefatos
+    # path_salvar_modelo = "./resultados/treino_todos_artefatos/"
+    # train_test_full(device=device,
+    #                 epochs = 12,
+    #                 dataset_path = dataset_path,
+    #                 path_salvar_modelo = path_salvar_modelo,
+    #                 balancear_dataset = False,
+    #                 shuffle_pacientes_flag = False,
+    #                 img_size = img_size,
+    #                 funcao_geradora_artefato=artefatos,
+    #                 nivel_aleatorio=True,
+    #                 nivel_aleatorio_teto=10)
+    # teste_artefatos(artefatos, artefatos_nomes,
+    #                 device,
+    #                 path_salvar_modelo, dataset_path,
+    #                 img_size, num_classes)
 
 def train_test_full(device,
                     img_size = 256,
                     path_salvar_modelo = './',
-                    dataset_path = "./patientImages/splits",
+                    dataset_path = "./rsna-intracranial-hemorrhage-detection/",
                     funcao_geradora_artefato = None,
                     nivel_degradacao = 5,
                     nivel_aleatorio = False,
                     nivel_aleatorio_teto = 10,
                     epochs = 15,
-                    balancear_dataset = True,
+                    balancear_dataset = False,
                     shuffle_pacientes_flag = False):
     """
     Código usado para usar um artefato e um nível de degradação específico na fase
@@ -162,7 +109,7 @@ def train_test_full(device,
 
     print(f"Informações:\nimg_size={img_size}\npath_salvar={path_salvar_modelo}\ndataset={dataset_path}\nfunc={funcao_geradora_artefato}\nnivel={nivel_degradacao}, aleatorio={nivel_aleatorio}, teto={nivel_aleatorio_teto}\nepochs={epochs}\nbalancear_dataset={balancear_dataset}, shuffle_pacientes_flag={shuffle_pacientes_flag}\n")
 
-    num_classes = 3 # talvez deixar como parâmetro? mas já tem um monte
+    num_classes = 6 # talvez deixar como parâmetro? mas já tem um monte
 
     # Criando datasets
     # dataset_path = "/content/drive/MyDrive/2020-12-BRICS/Neural Black/patientImages/splits"
@@ -172,9 +119,7 @@ def train_test_full(device,
                     funcao_geradora_artefato,
                     nivel_degradacao,
                     nivel_aleatorio_teto,
-                    nivel_aleatorio,
-                    num_classes,
-                    shuffle_pacientes_flag)
+                    nivel_aleatorio)
 
     # Criando dataloaders
     train_gen, valid_gen, test_gen = generate_dataloader_train_valid_test(

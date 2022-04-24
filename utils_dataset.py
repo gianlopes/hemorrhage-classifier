@@ -1,12 +1,15 @@
+import pickle
 import torch
+import torch.utils
+import torch.utils.data
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
 import numpy as np
 from PIL import Image
-
-# Para conseguir reproduzir resultados
-torch.manual_seed(42)
-np.random.seed(42)
+import pathlib
+import pydicom as dcm
+import dicom_misc as misc
+import h_labels
 
 class ResizeDataset(torch.utils.data.Dataset):
     '''
@@ -109,11 +112,69 @@ class RotationDataset(torch.utils.data.Dataset):
 
         return data, y
 
+# adapted from https://github.com/appian42/kaggle-rsna-intracranial-hemorrhage/
+class HemorrhageBaseDataset(torch.utils.data.Dataset):
+    def __init__(self, data_path: pathlib.Path, fold_list: list):
+        self.data_path = data_path
+        input_df_path = self.data_path / 'folds_df.pkl'
+        with open(input_df_path, 'rb') as f:
+            df = pickle.load(f)
+
+        df = df.loc[df['fold'].isin(fold_list)] # Filtrando folds
+
+        # df = df.sample(1000)
+
+        self.dataset = df
+
+    def __len__(self) -> int:
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        df_row = self.dataset.iloc[idx]
+
+        dicom_path = self.data_path / 'stage_2_train' / df_row['id']
+
+        # Ajustando window
+        dicom = dcm.dcmread(dicom_path)
+        img = dicom.pixel_array
+        img = misc.rescale_image(
+            img, df_row.RescaleSlope, df_row.RescaleIntercept, df_row.BitsStored, df_row.PixelRepresentation)
+        img = misc.apply_window(img, 40, 80)
+
+        # aqui os labels serão entregues com string em uma lista
+        labels = df_row.labels.split()
+
+        return img, labels
+
+class HemorrhageDataset(torch.utils.data.Dataset):
+    def __init__(self, dataset, num_classes=6):
+        self.dataset = dataset
+        self.num_classes = num_classes
+        # Transformation for converting to a tensor
+        self.transform = transforms.Compose([
+            transforms.ToTensor(),
+        ])
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        X, y = self.dataset[idx]
+        # perform transformations on one instance of X
+        # Original image as a tensor
+        data = self.transform(X)
+        # one-hot encode the labels
+        label = torch.zeros(self.num_classes, dtype=torch.float32)
+        for v in y:
+            label[h_labels.label_to_num[v]] = 1.0
+
+        return data, label
+
 
 class BrainTumorDataset(torch.utils.data.Dataset):
     '''
     Classe final do dataset, onde as imagens são transformadas em tensores
-    e o labels recebem o onehot encode
+    e os labels recebem o onehot encode
     '''
     def __init__(self, dataset, num_classes=3):
         self.dataset = dataset
@@ -180,6 +241,8 @@ def get_targets(dataset):
         return dataset.targets
     if isinstance(dataset, torch.utils.data.ConcatDataset): # Para o concatDataset temos que concatenar o targets
         return np.concatenate([get_targets(sub_dataset) for sub_dataset in dataset.datasets])
+    if isinstance(dataset, HemorrhageDataset):
+        raise NotImplementedError('Hemorrhage dataset get_targets não implementado, faça o balanceamento usando o df da classe')
     else: # Para os outros datasets que criamos, temos que ir procurando os targets no dataset de origem
         return get_targets(dataset.dataset)
 
