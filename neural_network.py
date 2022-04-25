@@ -117,7 +117,7 @@ def train_valid(model, epochs,
             # forward pass image sample
             y_pred = model(X)
             # calculate loss
-            loss = criterion(y_pred.float(), y.long())
+            loss = criterion(y_pred.float(), y)
 
             # get argmax of predicted tensor, which is our label
             predicted = torch.sigmoid(y_pred).data
@@ -181,7 +181,7 @@ def train_valid(model, epochs,
                 total_images += y.shape[0]
 
                 # get loss of validation set
-                loss += criterion(y_val.float(), y.long()).item() * X.size(0)
+                loss += criterion(y_val.float(), y).item() * X.size(0)
 
         # média da loss, diferente do que está no notebook no drive
         loss /= len(valid_gen.dataset)
@@ -287,7 +287,7 @@ def test(model,
             predicted[predicted < 0.5] = 0
             pred.append(predicted)
 
-            loss += criterion(y_val.float(), y.long()).item() * X.size(0)
+            loss += criterion(y_val.float(), y).item() * X.size(0)
 
             # número de acertos
             correct += (predicted == y).sum()
