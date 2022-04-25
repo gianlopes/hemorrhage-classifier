@@ -146,24 +146,10 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
         img = misc.rescale_image(
             img, df_row.RescaleSlope, df_row.RescaleIntercept, df_row.BitsStored, df_row.PixelRepresentation)
         img = misc.apply_window(img, 40, 80)
-        print(img)
-        print(img.shape)
-        print(np.min(img))
-        print(np.max(img))
         img = to_0255(img)
-        print(img)
-        print(img.shape)
-        print(np.min(img))
-        print(np.max(img))
         img = np.repeat(img[..., np.newaxis], 3, -1) # converte para 3 canais
-        print(img)
-        print(img.shape)
-        print(np.min(img))
-        print(np.max(img))
         img = Image.fromarray(img)
-        print(img)
 
-        exit(1);
         # aqui os labels serão entregues com string em uma lista
         labels = df_row.labels.split()
 
