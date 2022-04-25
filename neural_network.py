@@ -5,7 +5,7 @@ from torch import nn
 import numpy as np
 from torchvision import models
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.metrics import confusion_matrix, classification_report, multilabel_confusion_matrix
 import pandas as pd
 import seaborn as sns
 
@@ -60,7 +60,7 @@ def define_config(model, device):
 
     # loss function
     # if GPU is available set loss function to use GPU
-    criterion = nn.CrossEntropyLoss().to(device)
+    criterion = nn.BCEWithLogitsLoss.to(device)
 
     # optimizer
     optimizer = torch.optim.SGD(model.parameters(), momentum=0.9, lr=3e-4)
@@ -117,12 +117,14 @@ def train_valid(model, epochs,
             # forward pass image sample
             y_pred = model(X)
             # calculate loss
-            loss = criterion(y_pred.float(), torch.argmax(y, dim=1).long())
+            loss = criterion(y_pred.float(), y.long())
 
             # get argmax of predicted tensor, which is our label
-            predicted = torch.argmax(y_pred, dim=1).data
+            predicted = torch.sigmoid(y_pred).data
+            predicted[predicted >= 0.5] = 1.0
+            # predicted = torch.argmax(y_pred, dim=1).data
             # if predicted label is correct as true label, calculate the sum for samples
-            batch_corr = (predicted == torch.argmax(y, dim=1)).sum()
+            batch_corr = (predicted == y).sum()
             # increment train correct with correcly predicted labels per batch
             trn_corr += batch_corr
 
@@ -167,16 +169,17 @@ def train_valid(model, epochs,
                 y_val = model(X)
 
                 # get argmax of predicted tensor, which is our label
-                predicted = torch.argmax(y_val, dim=1).data
+                predicted = torch.sigmoid(y_val).data
+                predicted[predicted >= 0.5] = 1.0
 
                 # increment test correct with correcly predicted labels per batch
-                val_corr += (predicted == torch.argmax(y, dim=1)).sum()
+                val_corr += (predicted == y).sum()
 
                 # Contando imagens
                 total_images += y.shape[0]
 
                 # get loss of validation set
-                loss += criterion(y_val.float(), torch.argmax(y, dim=1).long()).item() * X.size(0)
+                loss += criterion(y_val.float(), y.long()).item() * X.size(0)
 
         # média da loss, diferente do que está no notebook no drive
         loss /= len(valid_gen.dataset)
@@ -271,19 +274,20 @@ def test(model,
             X, y = X.to(device), y.to(device)
 
             # Guardando os labels originais para visualizar a matriz de confusão
-            labels.append(torch.argmax(y, dim=1).data)
+            labels.append(y.data)
 
             # Predict
             y_val = model(X)
 
             # get argmax of predicted values, which is our label
-            predicted = torch.argmax(y_val, dim=1).data
+            predicted = torch.sigmoid(y_pred).data
+            predicted[predicted >= 0.5] = 1.0
             pred.append(predicted)
 
-            loss += criterion(y_val.float(), torch.argmax(y, dim=1).long()).item() * X.size(0)
+            loss += criterion(y_val.float(), y.long()).item() * X.size(0)
 
             # número de acertos
-            correct += (predicted == torch.argmax(y, dim=1)).sum()
+            correct += (predicted == y).sum()
 
             # Contando imagens
             total_images += y.shape[0]
@@ -301,10 +305,10 @@ def test(model,
         pred = torch.stack(pred)
 
         # Define ground-truth labels as a list
-        LABELS = ['Meningioma', 'Glioma', 'Pituitary']
+        LABELS = ['any', 'epidural', 'subdural', 'subarachnoid', 'intraventricular', 'intraparenchymal',]
 
         # Plot the confusion matrix
-        arr = confusion_matrix(labels.view(-1).cpu(), pred.view(-1).cpu()) # corrigir no colab, essa linha estava errada, ytrue vem antes de ypred
+        arr = multilabel_confusion_matrix(labels.view(-1).cpu(), pred.view(-1).cpu()) # corrigir no colab, essa linha estava errada, ytrue vem antes de ypred
         df_cm = pd.DataFrame(arr, LABELS, LABELS)
         plt.figure(figsize = (9,6))
         sns.heatmap(df_cm, annot=True, fmt="d", cmap='viridis')

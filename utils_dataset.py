@@ -113,8 +113,11 @@ class RotationDataset(torch.utils.data.Dataset):
         return data, y
 
 def to_0255(img):
+    maxi = np.max(img)
+    if maxi == 0:
+        maxi = 1
     img = img - np.min(img)
-    img = img / np.max(img)
+    img = img / maxi
     img = img * 255
     return img.astype(np.uint8)
 
