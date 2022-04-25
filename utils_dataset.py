@@ -128,7 +128,7 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
 
         df = df.loc[df['fold'].isin(fold_list)] # Filtrando folds
 
-        # df = df.sample(1000)
+        df = df.sample(1000)
 
         self.dataset = df
 
@@ -146,9 +146,17 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
         img = misc.rescale_image(
             img, df_row.RescaleSlope, df_row.RescaleIntercept, df_row.BitsStored, df_row.PixelRepresentation)
         img = misc.apply_window(img, 40, 80)
+        print(img)
+        print(img.shape)
         img = to_0255(img)
+        print(img)
+        print(img.shape)
         img = np.repeat(img[..., np.newaxis], 3, -1) # converte para 3 canais
+        print(img)
+        print(img.shape)
         img = Image.fromarray(img)
+        print(img)
+
 
         # aqui os labels serão entregues com string em uma lista
         labels = df_row.labels.split()
