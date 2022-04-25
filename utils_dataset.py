@@ -112,6 +112,12 @@ class RotationDataset(torch.utils.data.Dataset):
 
         return data, y
 
+def to_0255(img):
+    img = img - np.min(img)
+    img = img / np.max(img)
+    img = img * 255
+    return img.astype(np.uint8)
+
 # adapted from https://github.com/appian42/kaggle-rsna-intracranial-hemorrhage/
 class HemorrhageBaseDataset(torch.utils.data.Dataset):
     def __init__(self, data_path: pathlib.Path, fold_list: list):
@@ -140,6 +146,7 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
         img = misc.rescale_image(
             img, df_row.RescaleSlope, df_row.RescaleIntercept, df_row.BitsStored, df_row.PixelRepresentation)
         img = misc.apply_window(img, 40, 80)
+        img = to_0255(img)
         img = np.repeat(img[..., np.newaxis], 3, -1) # converte para 3 canais
         img = Image.fromarray(img)
 
