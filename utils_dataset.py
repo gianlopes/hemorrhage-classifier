@@ -163,7 +163,7 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
         img = Image.fromarray(img)
         print(img)
 
-
+        exit(1);
         # aqui os labels serão entregues com string em uma lista
         labels = df_row.labels.split()
 
