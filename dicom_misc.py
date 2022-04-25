@@ -33,7 +33,8 @@ def apply_window(image, center, width):
     max_value = center + width // 2 # maximum HU level
     image[image < min_value] = min_value # set img_min for all HU levels less than minimum HU level
     image[image > max_value] = max_value # set img_max for all HU levels higher than maximum HU level
-    return image
+    image = (image - min_value) / (max_value - min_value)*255.0
+    return image.astype(np.uint8)
 
 def get_windowed_ratio(image, center, width):
     # get ratio of pixels within the window
