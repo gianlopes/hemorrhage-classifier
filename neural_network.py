@@ -122,6 +122,7 @@ def train_valid(model, epochs,
             # get argmax of predicted tensor, which is our label
             predicted = torch.sigmoid(y_pred).data
             predicted[predicted >= 0.5] = 1.0
+            predicted[predicted < 0.5] = 0
             # predicted = torch.argmax(y_pred, dim=1).data
             # if predicted label is correct as true label, calculate the sum for samples
             batch_corr = (predicted == y).sum()
@@ -145,7 +146,7 @@ def train_valid(model, epochs,
 
         # print training metrics
         # logger.info(f'\n\nEpoch {(i+1)}\nAccuracy: {trn_corr.item()*100/(total_images):2.2f} %  Loss: {temp_loss_train.item():2.4f}  Duration: {((e_end-e_start)/60):.2f} minutes\n') # total_images = 4 images per batch * 8 augmentations per image * batch length
-        print(f'Epoch {(i+1)}/{epochs}\nAccuracy: {trn_corr.item()*100/(total_images):2.2f} %  Loss: {temp_loss_train:2.4f}  Duration: {((e_end-e_start)/60):.2f} minutes') # total_images = 4 images per batch * 8 augmentations per image * batch length
+        print(f'Epoch {(i+1)}/{epochs}\nAccuracy: {trn_corr.item()*100/(total_images/6):2.2f} %  Loss: {temp_loss_train:2.4f}  Duration: {((e_end-e_start)/60):.2f} minutes') # total_images = 4 images per batch * 8 augmentations per image * batch length
 
         train_losses.append(temp_loss_train)
         train_correct.append(trn_corr.item())
@@ -171,6 +172,7 @@ def train_valid(model, epochs,
                 # get argmax of predicted tensor, which is our label
                 predicted = torch.sigmoid(y_val).data
                 predicted[predicted >= 0.5] = 1.0
+                predicted[predicted < 0.5] = 0
 
                 # increment test correct with correcly predicted labels per batch
                 val_corr += (predicted == y).sum()
@@ -184,11 +186,11 @@ def train_valid(model, epochs,
         # média da loss, diferente do que está no notebook no drive
         loss /= len(valid_gen.dataset)
         # print validation metrics
-        print(f'Validation Accuracy {val_corr.item()*100/(total_images):2.2f} % Validation Loss: {loss:2.4f}')
+        print(f'Validation Accuracy {val_corr.item()*100/(total_images)/6:2.2f} % Validation Loss: {loss:2.4f}')
         # logger.info(f'\n\nValidation Accuracy {tst_corr.item()*100/(total_images):2.2f} % Validation Loss: {loss.item():2.4f}\n')
 
         # Salvando o modelo com a melhor acurácia
-        acc = val_corr.item()*100/(total_images)
+        acc = val_corr.item()*100/(total_images)/6
         if acc >= max_acc and loss < saved_loss:
             torch.save(model.state_dict(), modelo_salvo) # TODO
             # logger.info(f'\n\nSalvando modelo com acurácia {val_corr.item()*100/(total_images):2.2f} % e loss {loss:2.4f}\n em {modelo_salvo}\n\n')
@@ -223,8 +225,8 @@ def train_valid(model, epochs,
 
     # Plot de acurácia
     plt.figure()
-    plt.plot([t*100/int(len(train_gen.dataset)) for t in train_correct], label='Training accuracy')
-    plt.plot([t*100/int(len(valid_gen.dataset)) for t in valid_correct], label='Validation accuracy')
+    plt.plot([t*100/int(len(train_gen.dataset)/6) for t in train_correct], label='Training accuracy')
+    plt.plot([t*100/int(len(valid_gen.dataset)/6) for t in valid_correct], label='Validation accuracy')
     ax = plt.gca()
     ax.set(yticks=range(0, 100+1, 10))
     plt.title('Accuracy Metrics')
@@ -280,8 +282,9 @@ def test(model,
             y_val = model(X)
 
             # get argmax of predicted values, which is our label
-            predicted = torch.sigmoid(y_pred).data
+            predicted = torch.sigmoid(y_val).data
             predicted[predicted >= 0.5] = 1.0
+            predicted[predicted < 0.5] = 0
             pred.append(predicted)
 
             loss += criterion(y_val.float(), y.long()).item() * X.size(0)
@@ -298,7 +301,7 @@ def test(model,
         # logger.info(f"Test Loss: {loss:.4f}")
         # logger.info(f'Test accuracy: {correct.item()*100/(total_images):.2f}%')
         print(f"Test Loss: {loss:.4f}")
-        print(f'Test accuracy: {correct.item()*100/(total_images):.2f}%')
+        print(f'Test accuracy: {correct.item()*100/(total_images)/6:.2f}%')
 
         # Convert list of tensors to tensors -> Para usar nas estatísticas
         labels = torch.stack(labels)
@@ -320,4 +323,4 @@ def test(model,
         # Print the classification report
         # logger.info(f"Clasification Report\n\n{classification_report(pred.view(-1).cpu(), labels.view(-1).cpu())}") # TODO
         print(f"Clasification Report\n\n{classification_report(pred.view(-1).cpu(), labels.view(-1).cpu())}") # TODO
-    return correct.item()*100/(total_images), loss
+    return correct.item()*100/(total_images)/6, loss
