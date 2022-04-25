@@ -60,7 +60,7 @@ def define_config(model, device):
 
     # loss function
     # if GPU is available set loss function to use GPU
-    criterion = nn.BCEWithLogitsLoss.to(device)
+    criterion = nn.BCEWithLogitsLoss().to(device)
 
     # optimizer
     optimizer = torch.optim.SGD(model.parameters(), momentum=0.9, lr=3e-4)
