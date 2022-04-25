@@ -140,6 +140,7 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
         img = misc.rescale_image(
             img, df_row.RescaleSlope, df_row.RescaleIntercept, df_row.BitsStored, df_row.PixelRepresentation)
         img = misc.apply_window(img, 40, 80)
+        img = Image.fromarray(img)
 
         # aqui os labels serão entregues com string em uma lista
         labels = df_row.labels.split()
