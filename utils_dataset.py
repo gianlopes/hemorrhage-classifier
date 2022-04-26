@@ -131,7 +131,7 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
 
         df = df.loc[df['fold'].isin(fold_list)] # Filtrando folds
 
-        df = df.sample(1000)
+        df = df.sample(200)
 
         self.dataset = df
 

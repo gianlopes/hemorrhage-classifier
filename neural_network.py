@@ -310,7 +310,7 @@ def test(model,
         # Define ground-truth labels as a list
         LABELS = ['any', 'epidural', 'subdural', 'subarachnoid', 'intraventricular', 'intraparenchymal',]
 
-        arr = multilabel_confusion_matrix(labels.view(-1).cpu(), pred.view(-1).cpu()) # corrigir no colab, essa linha estava errada, ytrue vem antes de ypred
+        arr = multilabel_confusion_matrix(labels.cpu(), pred.cpu()) # corrigir no colab, essa linha estava errada, ytrue vem antes de ypred
         print(arr)
 
         for n, lab in enumerate(LABELS):
