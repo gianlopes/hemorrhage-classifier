@@ -1,4 +1,5 @@
 import pickle
+import pandas as pd
 import torch
 import torch.utils
 import torch.utils.data
@@ -123,7 +124,7 @@ def to_0255(img):
 
 # adapted from https://github.com/appian42/kaggle-rsna-intracranial-hemorrhage/
 class HemorrhageBaseDataset(torch.utils.data.Dataset):
-    def __init__(self, data_path: pathlib.Path, fold_list: list):
+    def __init__(self, data_path: pathlib.Path, fold_list: list, balance:bool = False):
         self.data_path = data_path
         input_df_path = self.data_path / 'folds_df.pkl'
         with open(input_df_path, 'rb') as f:
@@ -131,7 +132,13 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
 
         df = df.loc[df['fold'].isin(fold_list)] # Filtrando folds
 
-        df = df.sample(200)
+        if balance:
+            df_positive = df[df.labels != '']
+            df_negative = df[df.labels == '']
+            df_sampled = df_negative.sample(len(df_positive))
+            df = pd.concat([df_positive, df_sampled], sort=False)
+
+        # df = df.sample(2000)
 
         self.dataset = df
 

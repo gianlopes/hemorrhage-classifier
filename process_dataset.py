@@ -16,11 +16,12 @@ def process_dataset(data_path: pathlib.Path,
                     nivel_degradacao:int = 5,
                     nivel_aleatorio_teto:int = 10,
                     nivel_aleatorio:bool = False,
-                    augmentation:bool = False) -> HemorrhageDataset:
+                    augmentation:bool = False,
+                    balance:bool = False) -> HemorrhageDataset:
 
     # Carrega o dataset manualmente separado na estrutura ImageFolder do pytorch
     # data_original = ImageFolder(dataset_path)
-    data_original = HemorrhageBaseDataset(data_path, fold_list)
+    data_original = HemorrhageBaseDataset(data_path, fold_list, balance)
 
     # Resize nas imagens
     data_resize = ResizeDataset(data_original, img_size=img_size)
@@ -72,7 +73,7 @@ def process_dataset_train_valid_test(
     test_folds = list(range(8, 10))
 
     train_set = process_dataset(data_path, train_folds, img_size, funcao_geradora_artefato,
-                                nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio)
+                                nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=True)
     valid_set = process_dataset(data_path, valid_folds, img_size, funcao_geradora_artefato,
                                 nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False)
     test_set = process_dataset(data_path, test_folds, img_size, funcao_geradora_artefato,
