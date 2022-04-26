@@ -146,7 +146,7 @@ def train_valid(model, epochs,
 
         # print training metrics
         # logger.info(f'\n\nEpoch {(i+1)}\nAccuracy: {trn_corr.item()*100/(total_images):2.2f} %  Loss: {temp_loss_train.item():2.4f}  Duration: {((e_end-e_start)/60):.2f} minutes\n') # total_images = 4 images per batch * 8 augmentations per image * batch length
-        print(f'Epoch {(i+1)}/{epochs}\nAccuracy: {trn_corr.item()*100/(total_images/6):2.2f} %  Loss: {temp_loss_train:2.4f}  Duration: {((e_end-e_start)/60):.2f} minutes') # total_images = 4 images per batch * 8 augmentations per image * batch length
+        print(f'Epoch {(i+1)}/{epochs}\nAccuracy: {trn_corr.item()*100/(total_images)/6:2.2f} %  Loss: {temp_loss_train:2.4f}  Duration: {((e_end-e_start)/60):.2f} minutes') # total_images = 4 images per batch * 8 augmentations per image * batch length
 
         train_losses.append(temp_loss_train)
         train_correct.append(trn_corr.item())
@@ -331,5 +331,5 @@ def test(model,
 
         # Print the classification report
         # logger.info(f"Clasification Report\n\n{classification_report(pred.view(-1).cpu(), labels.view(-1).cpu())}") # TODO
-        print(f"Clasification Report\n\n{classification_report(pred.view(-1).cpu(), labels.view(-1).cpu())}") # TODO
+        print(f"Clasification Report\n\n{classification_report(pred.cpu(), labels.cpu())}") # TODO
     return correct.item()*100/(total_images)/6, loss
