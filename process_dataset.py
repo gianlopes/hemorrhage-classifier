@@ -75,9 +75,9 @@ def process_dataset_train_valid_test(
     train_set = process_dataset(data_path, train_folds, img_size, funcao_geradora_artefato,
                                 nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=True)
     valid_set = process_dataset(data_path, valid_folds, img_size, funcao_geradora_artefato,
-                                nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False)
+                                nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=True)
     test_set = process_dataset(data_path, test_folds, img_size, funcao_geradora_artefato,
-                               nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False)
+                               nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=True)
 
     return train_set, valid_set, test_set
 

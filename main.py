@@ -24,13 +24,13 @@ def main():
                 ghosting.generate_ghosting]
     artefatos_nomes = ["ringing", "contrast", "blurring", "ruido_gaussiano", "ghosting"]
 
-    img_size = 256
+    img_size = 512
     dataset_path = "/mnt/nas/GianlucasLopes/hemorragia/rsna-intracranial-hemorrhage-detection/"
     
     #Treino sem degradação
     path_salvar_modelo = "./resultados/treino_nao_degradadas/"
     train_test_full(device = device,
-                    epochs = 2,
+                    epochs = 15,
                     dataset_path = dataset_path,
                     path_salvar_modelo = path_salvar_modelo,
                     img_size = img_size)
