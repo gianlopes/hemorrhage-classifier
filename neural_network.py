@@ -304,16 +304,16 @@ def test(model,
         print(f'Test accuracy: {correct.item()*100/(total_images)/6:.2f}%')
 
         # Convert list of tensors to tensors -> Para usar nas estatísticas
-        labels = torch.stack(labels)
-        pred = torch.stack(pred)
+        labels = torch.cat(labels)
+        pred = torch.cat(pred)
 
         # Define ground-truth labels as a list
         LABELS = ['any', 'epidural', 'subdural', 'subarachnoid', 'intraventricular', 'intraparenchymal',]
 
-        print(labels.cpu().squeeze())
-        print(pred.cpu().squeeze())
+        # print(labels.cpu().squeeze())
+        # print(pred.cpu().squeeze())
 
-        arr = multilabel_confusion_matrix(labels.cpu().squeeze(), pred.cpu().squeeze()) # corrigir no colab, essa linha estava errada, ytrue vem antes de ypred
+        arr = multilabel_confusion_matrix(labels.cpu(), pred.cpu()) # corrigir no colab, essa linha estava errada, ytrue vem antes de ypred
         print(arr)
 
         for n, lab in enumerate(LABELS):
