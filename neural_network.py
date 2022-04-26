@@ -225,8 +225,8 @@ def train_valid(model, epochs,
 
     # Plot de acurácia
     plt.figure()
-    plt.plot([t*100/int(len(train_gen.dataset)/6) for t in train_correct], label='Training accuracy')
-    plt.plot([t*100/int(len(valid_gen.dataset)/6) for t in valid_correct], label='Validation accuracy')
+    plt.plot([t*100/int(len(train_gen.dataset))/6 for t in train_correct], label='Training accuracy')
+    plt.plot([t*100/int(len(valid_gen.dataset))/6 for t in valid_correct], label='Validation accuracy')
     ax = plt.gca()
     ax.set(yticks=range(0, 100+1, 10))
     plt.title('Accuracy Metrics')
