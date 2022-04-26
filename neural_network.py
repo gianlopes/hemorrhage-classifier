@@ -310,14 +310,18 @@ def test(model,
         # Define ground-truth labels as a list
         LABELS = ['any', 'epidural', 'subdural', 'subarachnoid', 'intraventricular', 'intraparenchymal',]
 
-        # Plot the confusion matrix
         arr = multilabel_confusion_matrix(labels.view(-1).cpu(), pred.view(-1).cpu()) # corrigir no colab, essa linha estava errada, ytrue vem antes de ypred
-        df_cm = pd.DataFrame(arr, LABELS, LABELS)
-        plt.figure(figsize = (9,6))
-        sns.heatmap(df_cm, annot=True, fmt="d", cmap='viridis')
-        plt.xlabel("Prediction")
-        plt.ylabel("Target")
-        plt.savefig(f'{path_salvar_modelo}confusion matrix.png', bbox_inches='tight')
+        for lab in LABELS:
+            df_cm = pd.DataFrame(arr, ['False','True'], ['False','True'])
+            # Plot the confusion matrix
+            plt.figure(figsize = (9,6))
+            sns.heatmap(df_cm, annot=True, fmt="d", cmap='viridis')
+            plt.xlabel("Prediction")
+            plt.ylabel("Target")
+            plt.savefig(f'{path_salvar_modelo}confusion_matrix_{lab}.png', bbox_inches='tight')
+
+
+
         # plt.show()
 
         # Print the classification report
