@@ -309,6 +309,9 @@ def test(model,
         labels = torch.stack(labels)
         pred = torch.stack(pred)
 
+        print(labels)
+        print(pred)
+
         # Define ground-truth labels as a list
         LABELS = ['any', 'epidural', 'subdural', 'subarachnoid', 'intraventricular', 'intraparenchymal',]
 
