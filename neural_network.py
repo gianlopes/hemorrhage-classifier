@@ -311,8 +311,8 @@ def test(model,
         LABELS = ['any', 'epidural', 'subdural', 'subarachnoid', 'intraventricular', 'intraparenchymal',]
 
         arr = multilabel_confusion_matrix(labels.view(-1).cpu(), pred.view(-1).cpu()) # corrigir no colab, essa linha estava errada, ytrue vem antes de ypred
-        for lab in LABELS:
-            df_cm = pd.DataFrame(arr, ['False','True'], ['False','True'])
+        for n, lab in enumerate(LABELS):
+            df_cm = pd.DataFrame(arr[n], ['False','True'], ['False','True'])
             # Plot the confusion matrix
             plt.figure(figsize = (9,6))
             sns.heatmap(df_cm, annot=True, fmt="d", cmap='viridis')
