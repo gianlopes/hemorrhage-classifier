@@ -303,6 +303,8 @@ def test(model,
         print(f"Test Loss: {loss:.4f}")
         print(f'Test accuracy: {correct.item()*100/(total_images)/6:.2f}%')
 
+        print(labels)
+        print(pred)
         # Convert list of tensors to tensors -> Para usar nas estatísticas
         labels = torch.stack(labels)
         pred = torch.stack(pred)
