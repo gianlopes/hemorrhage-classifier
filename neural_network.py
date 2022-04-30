@@ -19,7 +19,7 @@ def import_nn(num_classes, device):
 
 
     # instantiate transfer learning model
-    model = models.resnet50(pretrained=True)
+    model = models.resnext101_32x8d(pretrained=True)
 
     # set all paramters as trainable
     for param in model.parameters():
@@ -36,8 +36,7 @@ def import_nn(num_classes, device):
                                     nn.Linear(2048, 2048),
                                     nn.SELU(),
                                     nn.Dropout(p=0.4),
-                                    nn.Linear(2048, num_classes),
-                                    nn.LogSigmoid())
+                                    nn.Linear(2048, num_classes))
 
     # set all paramters of the model as trainable
     for name, child in model.named_children():
@@ -60,10 +59,10 @@ def define_config(model, device):
 
     # loss function
     # if GPU is available set loss function to use GPU
-    criterion = nn.BCEWithLogitsLoss().to(device)
+    criterion = nn.BCEWithLogitsLoss(weight=torch.FloatTensor([2,1,1,1,1,1]).cuda()).to(device)
 
     # optimizer
-    optimizer = torch.optim.SGD(model.parameters(), momentum=0.9, lr=3e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1.4e-4)
 
     return criterion, optimizer
 
