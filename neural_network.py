@@ -19,7 +19,7 @@ def import_nn(num_classes, device):
 
 
     # instantiate transfer learning model
-    model = models.resnext101_32x8d(pretrained=True)
+    model = models.resnext50_32x4d(pretrained=True)
 
     # set all paramters as trainable
     for param in model.parameters():
