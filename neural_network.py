@@ -33,9 +33,6 @@ def import_nn(num_classes, device):
     model.fc = nn.Sequential(nn.Linear(n_inputs, 2048),
                                     nn.SELU(),
                                     nn.Dropout(p=0.4),
-                                    nn.Linear(2048, 2048),
-                                    nn.SELU(),
-                                    nn.Dropout(p=0.4),
                                     nn.Linear(2048, num_classes))
 
     # set all paramters of the model as trainable
