@@ -122,6 +122,9 @@ def to_0255(img):
     img = img * 255
     return img.astype(np.uint8)
 
+def filter_df_by_label(df, label: str):
+    return df[df.labels.apply(lambda st: st.split()).apply(lambda arr: label in arr)]
+
 # adapted from https://github.com/appian42/kaggle-rsna-intracranial-hemorrhage/
 class HemorrhageBaseDataset(torch.utils.data.Dataset):
     def __init__(self, data_path: pathlib.Path, fold_list: list, balance:bool = False):
@@ -133,10 +136,19 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
         df = df.loc[df['fold'].isin(fold_list)] # Filtrando folds
 
         if balance:
-            df_positive = df[df.labels != '']
+            # df_positive = df[df.labels != '']
+            dfs_labels = [filter_df_by_label(df, 'epidural')]
+            other_labels = ['intraparenchymal', 'intraventricular', 'subarachnoid', 'subdural']
+            for v in other_labels:
+                dfs_labels.append(filter_df_by_label(df, v).sample(len(dfs_labels[0])))
+
             df_negative = df[df.labels == '']
-            df_sampled = df_negative.sample(len(df_positive))
-            df = pd.concat([df_positive, df_sampled], sort=False)
+            # df_sampled = df_negative.sample(len(df_positive))
+            df_sampled = df_negative.sample(len(dfs_labels[0]))
+            dfs_labels.append(df_sampled)
+
+            # df = pd.concat([df_positive, df_sampled], sort=False)
+            df = pd.concat(dfs_labels, sort=False)
 
         # df = df.sample(2000)
 

@@ -28,7 +28,7 @@ def main():
     dataset_path = "/mnt/nas/GianlucasLopes/hemorragia/rsna-intracranial-hemorrhage-detection/"
     
     #Treino sem degradação
-    path_salvar_modelo = "./resultados/treino_4/"
+    path_salvar_modelo = "./resultados/treino_5/"
     train_test_full(device = device,
                     epochs = 10,
                     dataset_path = dataset_path,
