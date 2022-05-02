@@ -155,9 +155,13 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
         img = dicom.pixel_array
         img = misc.rescale_image(
             img, df_row.RescaleSlope, df_row.RescaleIntercept, df_row.BitsStored, df_row.PixelRepresentation)
-        img = misc.apply_window(img, 40, 80)
+        # img = misc.apply_window(img, 40, 80)
+        image1 = misc.apply_window(img, 40, 80)
+        image2 = misc.apply_window(img, 80, 200)
+        image3 = misc.apply_window(img, 40, 380)
+        img = np.array([image1, image2, image3,]).transpose(1,2,0)
         img = to_0255(img)
-        img = np.repeat(img[..., np.newaxis], 3, -1) # converte para 3 canais
+        # img = np.repeat(img[..., np.newaxis], 3, -1) # converte para 3 canais
         img = Image.fromarray(img)
 
         # aqui os labels serão entregues com string em uma lista
