@@ -150,7 +150,7 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
             # df = pd.concat([df_positive, df_sampled], sort=False)
             df = pd.concat(dfs_labels, sort=False)
 
-        # df = df.sample(2000)
+        df = df.sample(2000)
 
         self.dataset = df
 
@@ -182,13 +182,21 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
         return img, labels
 
 class HemorrhageDataset(torch.utils.data.Dataset):
-    def __init__(self, dataset, num_classes=6):
+    def __init__(self, dataset, num_classes=6, train=False):
         self.dataset = dataset
         self.num_classes = num_classes
         # Transformation for converting to a tensor
-        self.transform = transforms.Compose([
-            transforms.ToTensor(),
-        ])
+        if train:
+            self.transform = transforms.Compose([
+                transforms.RandomRotation(330),
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomVerticalFlip(),
+                transforms.ToTensor(),
+            ])
+        else:
+            self.transform = transforms.Compose([
+                transforms.ToTensor(),
+            ])
 
     def __len__(self):
         return len(self.dataset)
