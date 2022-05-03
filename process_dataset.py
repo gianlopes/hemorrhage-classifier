@@ -73,11 +73,11 @@ def process_dataset_train_valid_test(
     test_folds = list(range(8, 10))
 
     train_set = process_dataset(data_path, train_folds, img_size, funcao_geradora_artefato,
-                                nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=True)
+                                nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=False)
     valid_set = process_dataset(data_path, valid_folds, img_size, funcao_geradora_artefato,
-                                nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=True)
+                                nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=False)
     test_set = process_dataset(data_path, test_folds, img_size, funcao_geradora_artefato,
-                               nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=True)
+                               nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=False)
 
     return train_set, valid_set, test_set
 
@@ -97,10 +97,20 @@ def generate_dataloader(dataset,
         return gen
 
     # Caso balancear_dataset=True
-    labels_unique, counts = np.unique(get_targets(dataset), return_counts=True)
+    labels_unique, counts = np.unique(np.concatenate(get_targets(dataset)), return_counts=True)
     class_weights = [sum(counts) / c for c in counts]  # Calcula o pesos
     # Precisamos criar um array com um peso para cada imagem do dataset final(pode ter mais imagens que o final)
-    example_weights = [class_weights[e] for e in get_targets(dataset)]
+    labels_unique_dict = {k: v for v, k in enumerate(labels_unique)}
+    example_weights = []
+    for e in get_targets(dataset):
+        tot = 0
+        for es in e:
+            tot += class_weights[labels_unique_dict[es]]
+        tot /= len(e)
+        example_weights.append(tot)
+
+
+    # example_weights = [(class_weights[es] for es in e) for e in get_targets(dataset)]
     sampler = WeightedRandomSampler(
         example_weights, len(dataset))  # E cria um sampler
 
