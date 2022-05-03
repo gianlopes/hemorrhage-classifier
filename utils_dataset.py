@@ -277,7 +277,7 @@ def get_targets(dataset):
     if isinstance(dataset, torch.utils.data.ConcatDataset): # Para o concatDataset temos que concatenar o targets
         return np.concatenate([get_targets(sub_dataset) for sub_dataset in dataset.datasets])
     if isinstance(dataset, HemorrhageBaseDataset):
-        return dataset.dataset.labels.apply(lambda st: st.split()).apply(lambda st: [''] if (st == []) else st).tolist()
+        return dataset.dataset.labels.apply(lambda st: st.split()).apply(lambda st: [''] if (st == []) else st).apply(lambda arr: [x for x in arr if x != 'any']).tolist()
         # raise NotImplementedError('Hemorrhage dataset get_targets não implementado, faça o balanceamento usando o df da classe')
     else: # Para os outros datasets que criamos, temos que ir procurando os targets no dataset de origem
         return get_targets(dataset.dataset)
