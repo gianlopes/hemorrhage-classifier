@@ -150,7 +150,7 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
             # df = pd.concat([df_positive, df_sampled], sort=False)
             df = pd.concat(dfs_labels, sort=False)
 
-        df = df.sample(2000)
+        # df = df.sample(2000)
 
         self.dataset = df
 
