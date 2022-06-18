@@ -24,7 +24,7 @@ def main():
                 ghosting.generate_ghosting]
     artefatos_nomes = ["ringing", "contrast", "blurring", "ruido_gaussiano", "ghosting"]
 
-    img_size = 512
+    img_size = 256
     dataset_path = "/mnt/nas/GianlucasLopes/hemorragia/rsna-intracranial-hemorrhage-detection/"
     
     #Treino sem degradação
@@ -33,56 +33,8 @@ def main():
                     epochs = 10,
                     dataset_path = dataset_path,
                     path_salvar_modelo = path_salvar_modelo,
-                    img_size = img_size,
-                    balancear_dataset = True)
+                    img_size = img_size)
 
-
-    # teste_artefatos(artefatos, artefatos_nomes,
-    #                 device,
-    #                 path_salvar_modelo, dataset_path,
-    #                 img_size, num_classes)
-    
-    # teste_artefatos(ringing.generate_ringing, "ringing",
-    #                 device,
-    #                 path_salvar_modelo, dataset_path,
-    #                 img_size, num_classes)
-    
-    # teste_artefatos(contrast.generate_contrast, "contrast",
-    #                 device,
-    #                 path_salvar_modelo, dataset_path,
-    #                 img_size, num_classes)
-    
-    # teste_artefatos(blurring.generate_blurring, "blurring",
-    #                 device,
-    #                 path_salvar_modelo, dataset_path,
-    #                 img_size, num_classes)
-    
-    # teste_artefatos(ruido_gaussiano.generate_ruido_gaussiano, "ruido_gaussiano",
-    #                 device,
-    #                 path_salvar_modelo, dataset_path,
-    #                 img_size, num_classes)
-    
-    # teste_artefatos(ghosting.generate_ghosting, "ghosting",
-    #                 device,
-    #                 path_salvar_modelo, dataset_path,
-    #                 img_size, num_classes)
-
-    # # Treino com artefatos
-    # path_salvar_modelo = "./resultados/treino_todos_artefatos/"
-    # train_test_full(device=device,
-    #                 epochs = 12,
-    #                 dataset_path = dataset_path,
-    #                 path_salvar_modelo = path_salvar_modelo,
-    #                 balancear_dataset = False,
-    #                 shuffle_pacientes_flag = False,
-    #                 img_size = img_size,
-    #                 funcao_geradora_artefato=artefatos,
-    #                 nivel_aleatorio=True,
-    #                 nivel_aleatorio_teto=10)
-    # teste_artefatos(artefatos, artefatos_nomes,
-    #                 device,
-    #                 path_salvar_modelo, dataset_path,
-    #                 img_size, num_classes)
 
 def train_test_full(device,
                     img_size = 256,
