@@ -1,7 +1,8 @@
+import pathlib
 from artefatos import ringing, contrast, blurring, ruido_gaussiano, ghosting
 from neural_network import import_nn, define_config, train_valid, test
 from artefatos_testes import teste_artefatos
-from process_dataset import process_dataset_train_valid_test, generate_dataloader_train_valid_test
+from process_dataset import generate_dataloader, process_dataset, process_dataset_train_valid_test, generate_dataloader_train_valid_test
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,13 +25,13 @@ def main():
                 ghosting.generate_ghosting]
     artefatos_nomes = ["ringing", "contrast", "blurring", "ruido_gaussiano", "ghosting"]
 
-    img_size = 64
+    img_size = 512
     dataset_path = "/mnt/nas/GianlucasLopes/hemorragia/rsna-intracranial-hemorrhage-detection/"
     
     #Treino sem degradação
     path_salvar_modelo = "./resultados/treino_6/"
     train_test_full(device = device,
-                    epochs = 2,
+                    epochs = 8,
                     dataset_path = dataset_path,
                     path_salvar_modelo = path_salvar_modelo,
                     img_size = img_size)
@@ -95,6 +96,18 @@ def train_test_full(device,
     test(model, test_gen,
          criterion, device,
          path_salvar_modelo)
+
+    folds = list(range(0, 10))
+    data_path = pathlib.Path(dataset_path)
+    dataset = process_dataset(data_path, folds, img_size, None,
+                               nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=True)
+    gen = generate_dataloader(dataset, 20, balancear_dataset)
+    model = import_nn(num_classes, device)
+    criterion, optimizer = define_config(model, device)
+    test(model, gen,
+         criterion, device,
+         path_salvar_modelo,
+         False)
 
     plt.close('all')
 

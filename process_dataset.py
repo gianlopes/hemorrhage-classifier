@@ -51,7 +51,8 @@ def process_dataset(data_path: pathlib.Path,
 
     # Classe wrapper final
     # data_final = BrainTumorDataset(data_aug, num_classes=num_classes)
-    data_final = HemorrhageDataset(data_aug, train=train)
+    data_final = HemorrhageDataset(data_aug, base_dataset=data_original, train=train)
+
 
     return data_final
 

@@ -95,6 +95,9 @@ def run_nn(model: models.ResNet,
     original_labels:list[torch.Tensor] = []
     predicted_labels:list[torch.Tensor] = []
 
+    sigmoid_predicted_labels:list[list[float]] = []
+    id_list: list[str] = []
+
     if mode in ['valid', 'test']:
         cm = torch.no_grad()
     else:
@@ -103,7 +106,8 @@ def run_nn(model: models.ResNet,
     with cm:
         Data: torch.Tensor
         labels: torch.Tensor
-        for Data, labels in gen:
+        img_id: str
+        for Data, labels, img_id in gen:
             # set variables to device
             Data, labels = Data.to(device), labels.to(device)
             # forward pass image
@@ -132,12 +136,19 @@ def run_nn(model: models.ResNet,
             if mode in ['test']:
                 original_labels.append(labels.data)
                 predicted_labels.append(predicted)
+                with torch.no_grad():
+                    sigmoid_predicted_labels.extend(torch.sigmoid(y_pred).cpu().numpy())
+                    id_list.extend(img_id)
+
+            
             
             loss += temp_loss.item() * Data.size(0)
     loss /= len(gen.dataset)
     accuracy = total_correct * 100 / total_images / 6 # 6 é o numero de classes
 
-    return accuracy, loss, original_labels, predicted_labels
+    model2_data = {'id': id_list, 'result': sigmoid_predicted_labels}
+
+    return accuracy, loss, original_labels, predicted_labels, model2_data
 
 
 def train_valid(model: models.ResNet, epochs: int,
@@ -173,7 +184,7 @@ def train_valid(model: models.ResNet, epochs: int,
     for i in range(epochs):
         e_start = time.time()
 
-        accuracy, loss, _, _ = run_nn(model, train_gen, criterion, optimizer, device, nn_modes.train)
+        accuracy, loss, _, _, _ = run_nn(model, train_gen, criterion, optimizer, device, nn_modes.train)
 
         e_end = time.time()
         hours, minutes = divmod((e_end - e_start) / 60, 60)
@@ -187,7 +198,7 @@ def train_valid(model: models.ResNet, epochs: int,
 
         e_start = time.time()
 
-        accuracy, loss, _, _ = run_nn(model, valid_gen, criterion, optimizer, device, nn_modes.valid)
+        accuracy, loss, _, _, _ = run_nn(model, valid_gen, criterion, optimizer, device, nn_modes.valid)
 
         e_end = time.time()
         hours, minutes = divmod((e_end - e_start) / 60, 60)
@@ -259,7 +270,7 @@ def test(model: models.ResNet,
     if show_info:
         print("\nIniciando teste\n")
 
-    accuracy, loss, original_labels, predicted_labels = run_nn(model, test_gen, criterion, None, device, nn_modes.test)
+    accuracy, loss, original_labels, predicted_labels, model2_data = run_nn(model, test_gen, criterion, None, device, nn_modes.test)
 
     if show_info:
         print(f"Test Loss: {loss:.4f}")
@@ -285,4 +296,9 @@ def test(model: models.ResNet,
             plt.savefig(f'{path_salvar_modelo}confusion_matrix_{lab}.png', bbox_inches='tight')
 
         print(f"Clasification Report\n\n{classification_report(pred.cpu(), labels.cpu())}")
+    
+    df = pd.DataFrame(model2_data)
+    path_to_save_df = pathlib_salvar_modelo / "modelo_data.csv"
+    df.to_csv(path_to_save_df, index=False)
+
     return accuracy, loss

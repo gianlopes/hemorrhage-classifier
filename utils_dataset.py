@@ -148,6 +148,10 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
     def __len__(self) -> int:
         return len(self.dataset)
 
+    def getId(self, idx: int):
+        img_id: str = self.dataset.iloc[idx]["ID"]
+        return img_id
+
     def __getitem__(self, idx):
         df_row = self.dataset.iloc[idx]
 
@@ -173,9 +177,10 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
         return img, labels
 
 class HemorrhageDataset(torch.utils.data.Dataset):
-    def __init__(self, dataset, num_classes=6, train=False):
+    def __init__(self, dataset, base_dataset: HemorrhageBaseDataset, num_classes=6, train=False):
         self.dataset = dataset
         self.num_classes = num_classes
+        self.base_dataset = base_dataset
         # Transformation for converting to a tensor
         if train:
             self.transform = transforms.Compose([
@@ -188,11 +193,12 @@ class HemorrhageDataset(torch.utils.data.Dataset):
             self.transform = transforms.Compose([
                 transforms.ToTensor(),
             ])
+        
 
     def __len__(self):
         return len(self.dataset)
 
-    def __getitem__(self, idx) -> tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor, str]:
         X, y = self.dataset[idx]
         # perform transformations on one instance of X
         # Original image as a tensor
@@ -202,7 +208,9 @@ class HemorrhageDataset(torch.utils.data.Dataset):
         for v in y:
             label[h_labels.label_to_num[v]] = 1.0
 
-        return data, label
+        img_id = self.base_dataset.getId(idx)
+
+        return data, label, img_id
 
 
 class BrainTumorDataset(torch.utils.data.Dataset):
