@@ -129,7 +129,7 @@ def generate_dataloader_train_valid_test(train_set, valid_set, test_set,
                                          balancear_dataset=True):
     train_batch_size = 10
     valid_batch_size = 10
-    test_batch_size = 20
+    test_batch_size = 40
     train_gen = generate_dataloader(
         train_set, train_batch_size, balancear_dataset)
     valid_gen = generate_dataloader(

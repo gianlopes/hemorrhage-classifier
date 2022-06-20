@@ -11,7 +11,7 @@ def main():
     # Escolhendo o device para realizar treino/teste
     if torch.cuda.is_available():
         # device_name = "cuda" # colab
-        device_name = "cuda:1" # servidor
+        device_name = "cuda:0" # servidor
     else:
         device_name = "cpu"
     device = torch.device(device_name)
@@ -29,7 +29,7 @@ def main():
     dataset_path = "/mnt/nas/GianlucasLopes/hemorragia/rsna-intracranial-hemorrhage-detection/"
     
     #Treino sem degradação
-    path_salvar_modelo = "./resultados/treino_6/"
+    path_salvar_modelo = "./resultados/treino_8_6/"
     train_test_full(device = device,
                     epochs = 8,
                     dataset_path = dataset_path,
@@ -67,47 +67,47 @@ def train_test_full(device,
 
     # Criando datasets
     # dataset_path = "/content/drive/MyDrive/2020-12-BRICS/Neural Black/patientImages/splits"
-    train_set, valid_set, test_set = process_dataset_train_valid_test(
-                    dataset_path,
-                    img_size,
-                    funcao_geradora_artefato,
-                    nivel_degradacao,
-                    nivel_aleatorio_teto,
-                    nivel_aleatorio)
+    # train_set, valid_set, test_set = process_dataset_train_valid_test(
+    #                 dataset_path,
+    #                 img_size,
+    #                 funcao_geradora_artefato,
+    #                 nivel_degradacao,
+    #                 nivel_aleatorio_teto,
+    #                 nivel_aleatorio)
 
-    # Criando dataloaders
-    train_gen, valid_gen, test_gen = generate_dataloader_train_valid_test(
-        train_set, valid_set, test_set, balancear_dataset)
+    # # Criando dataloaders
+    # train_gen, valid_gen, test_gen = generate_dataloader_train_valid_test(
+    #     train_set, valid_set, test_set, balancear_dataset)
 
-    # Importando modelo. Para mudar o tipo da rede, modifique a função import_nn
-    model = import_nn(num_classes, device)
+    # # Importando modelo. Para mudar o tipo da rede, modifique a função import_nn
+    # model = import_nn(num_classes, device)
 
-    # loss function e optimizer
-    criterion, optimizer = define_config(model, device)
+    # # loss function e optimizer
+    # criterion, optimizer = define_config(model, device)
 
-    # Treino
-    train_valid(model, epochs,
-                train_gen, valid_gen,
-                criterion, optimizer,
-                device,
-                path_salvar_modelo)
+    # # Treino
+    # train_valid(model, epochs,
+    #             train_gen, valid_gen,
+    #             criterion, optimizer,
+    #             device,
+    #             path_salvar_modelo)
 
-    # Testa no dataset de teste criado acima, com tudo misturado
-    test(model, test_gen,
-         criterion, device,
-         path_salvar_modelo)
+    # # Testa no dataset de teste criado acima, com tudo misturado
+    # test(model, test_gen,
+    #      criterion, device,
+    #      path_salvar_modelo)
 
     folds = list(range(0, 10))
     data_path = pathlib.Path(dataset_path)
     dataset = process_dataset(data_path, folds, img_size, None,
                                nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=True)
-    gen = generate_dataloader(dataset, 20, balancear_dataset)
+    gen = generate_dataloader(dataset, 40, balancear_dataset)
     model = import_nn(num_classes, device)
     criterion, optimizer = define_config(model, device)
     test(model, gen,
          criterion, device,
          path_salvar_modelo,
-         False)
+         True)
 
     plt.close('all')
 

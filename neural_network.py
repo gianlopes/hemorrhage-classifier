@@ -78,6 +78,8 @@ def run_nn(model: models.ResNet,
         criterion: nn.modules.loss._Loss, optimizer: Union[torch.optim.Optimizer , None],
         device: torch.device, mode: str):
 
+    print(f'\nIniciando {mode}...\n')
+
     if mode in ['train']:
         model.train()
     elif mode in ['valid', 'test']:
