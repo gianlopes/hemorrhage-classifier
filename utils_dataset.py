@@ -136,21 +136,12 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
         df = df.loc[df['fold'].isin(fold_list)] # Filtrando folds
 
         if balance:
-            # df_positive = df[df.labels != '']
-            dfs_labels = [filter_df_by_label(df, 'epidural')]
-            other_labels = ['intraparenchymal', 'intraventricular', 'subarachnoid', 'subdural']
-            for v in other_labels:
-                dfs_labels.append(filter_df_by_label(df, v).sample(len(dfs_labels[0])))
-
+            df_positive = df[df.labels != '']
             df_negative = df[df.labels == '']
-            # df_sampled = df_negative.sample(len(df_positive))
-            df_sampled = df_negative.sample(len(dfs_labels[0]))
-            dfs_labels.append(df_sampled)
+            df_sampled = df_negative.sample(len(df_positive))
+            df = pd.concat([df_positive, df_sampled], sort=False)
 
-            # df = pd.concat([df_positive, df_sampled], sort=False)
-            df = pd.concat(dfs_labels, sort=False)
-
-        # df = df.sample(2000)
+        df = df.sample(2000)
 
         self.dataset = df
 
@@ -201,11 +192,11 @@ class HemorrhageDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.dataset)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> tuple[torch.Tensor, torch.Tensor]:
         X, y = self.dataset[idx]
         # perform transformations on one instance of X
         # Original image as a tensor
-        data = self.transform(X)
+        data: torch.Tensor = self.transform(X)
         # one-hot encode the labels
         label = torch.zeros(self.num_classes, dtype=torch.float32)
         for v in y:

@@ -1,13 +1,18 @@
+from contextlib import nullcontext
 import pathlib
 import time
+from tokenize import String
+from typing import Union
 import torch
 from torch import nn
+from torch.utils.data import DataLoader
 import numpy as np
 from torchvision import models
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, classification_report, multilabel_confusion_matrix
 import pandas as pd
-import seaborn as sns
+import seaborn as sns 
+from utils_dataset import HemorrhageDataset
 
 
 def import_nn(num_classes, device):
@@ -63,11 +68,84 @@ def define_config(model, device):
 
     return criterion, optimizer
 
-def train_valid(model, epochs,
-                train_gen, valid_gen,
-                criterion, optimizer,
-                device,
-                path_salvar_modelo):
+class nn_modes:
+    train = 'train'
+    valid = 'valid'
+    test = 'test'
+
+def run_nn(model: models.ResNet,
+        gen: DataLoader[HemorrhageDataset],
+        criterion: nn.modules.loss._Loss, optimizer: Union[torch.optim.Optimizer , None],
+        device: torch.device, mode: str):
+
+    if mode in ['train']:
+        model.train()
+    elif mode in ['valid', 'test']:
+        model.eval()
+    else:
+        raise RuntimeError(f'Unexpected mode {mode}')
+
+    # empty correct and test correct counter as 0 during every iteration
+    total_correct = 0
+    # contador de imagens totais
+    total_images = 0
+
+    loss:float = 0
+
+    original_labels:list[torch.Tensor] = []
+    predicted_labels:list[torch.Tensor] = []
+
+    if mode in ['valid', 'test']:
+        cm = torch.no_grad()
+    else:
+        cm = nullcontext()
+
+    with cm:
+        Data: torch.Tensor
+        labels: torch.Tensor
+        for Data, labels in gen:
+            # set variables to device
+            Data, labels = Data.to(device), labels.to(device)
+            # forward pass image
+            y_pred = model(Data)
+            # calculate loss
+            temp_loss = criterion(y_pred.float(), labels)
+            # get argmax of predicted tensor, which is our label
+            predicted = torch.sigmoid(y_pred).data
+            predicted[predicted >= 0.5] = 1.0
+            predicted[predicted < 0.5] = 0
+            # if predicted label is correct as true label, calculate the sum for samples
+            total_correct += (predicted == labels).sum().item()
+            # Contando imagens
+            total_images += labels.shape[0]
+
+            if mode in ['train']:
+                if optimizer is None:
+                    raise RuntimeError('Optimizer is None')
+                # set optimizer gradients to zero
+                optimizer.zero_grad()
+                # back propagate with loss
+                temp_loss.backward()
+                # perform optimizer step
+                optimizer.step()
+
+            if mode in ['test']:
+                original_labels.append(labels.data)
+                predicted_labels.append(predicted)
+            
+            loss += temp_loss.item() * Data.size(0)
+    loss /= len(gen.dataset)
+    accuracy = total_correct * 100 / total_images / 6 # 6 é o numero de classes
+
+    return accuracy, loss, original_labels, predicted_labels
+
+
+def train_valid(model: models.ResNet, epochs: int,
+            train_gen: DataLoader[HemorrhageDataset], 
+            valid_gen: DataLoader[HemorrhageDataset],
+            criterion: nn.modules.loss._Loss, optimizer: torch.optim.Optimizer,
+            device: torch.device,
+            path_salvar_modelo: str):
 
     # Local onde o modelo treinado será salvo
     pathlib_salvar_modelo = pathlib.Path(path_salvar_modelo)
@@ -76,10 +154,10 @@ def train_valid(model, epochs,
     pathlib_salvar_modelo.mkdir(parents=True, exist_ok=True)
 
     # empty lists to store losses and accuracies
-    train_losses = []
-    valid_losses = []
-    train_correct = []
-    valid_correct = []
+    train_losses:list[float] = []
+    valid_losses:list[float] = []
+    train_accs:list[float] = []
+    valid_accs:list[float] = []
 
     # Salvar melhor modelo
     max_acc = 0
@@ -93,117 +171,47 @@ def train_valid(model, epochs,
 
     # start training
     for i in range(epochs):
-        model.train()
-        # empty training correct and test correct counter as 0 during every iteration
-        trn_corr = 0
-        val_corr = 0
-
-        # contador de imageis totais
-        total_images = 0
-
-        # set epoch's starting time
         e_start = time.time()
 
-        temp_loss_train = 0
+        accuracy, loss, _, _ = run_nn(model, train_gen, criterion, optimizer, device, nn_modes.train)
 
-        for X, y in train_gen:
-            # set label as cuda if device is cuda
-            X, y = X.to(device), y.to(device)
-
-            # forward pass image sample
-            y_pred = model(X)
-            # calculate loss
-            loss = criterion(y_pred.float(), y)
-
-            # get argmax of predicted tensor, which is our label
-            predicted = torch.sigmoid(y_pred).data
-            predicted[predicted >= 0.5] = 1.0
-            predicted[predicted < 0.5] = 0
-            # predicted = torch.argmax(y_pred, dim=1).data
-            # if predicted label is correct as true label, calculate the sum for samples
-            batch_corr = (predicted == y).sum()
-            # increment train correct with correcly predicted labels per batch
-            trn_corr += batch_corr
-
-            # Contando imagens
-            total_images += y.shape[0]
-
-            # set optimizer gradients to zero
-            optimizer.zero_grad()
-            # back propagate with loss
-            loss.backward()
-            # perform optimizer step
-            optimizer.step()
-
-            temp_loss_train += loss.item() * X.size(0)
-        temp_loss_train /= len(train_gen.dataset)
-        # set epoch's end time
         e_end = time.time()
+        hours, minutes = divmod((e_end - e_start) / 60, 60)
+        
+        train_losses.append(loss)
+        train_accs.append(accuracy)
 
-        # print training metrics
-        # logger.info(f'\n\nEpoch {(i+1)}\nAccuracy: {trn_corr.item()*100/(total_images):2.2f} %  Loss: {temp_loss_train.item():2.4f}  Duration: {((e_end-e_start)/60):.2f} minutes\n') # total_images = 4 images per batch * 8 augmentations per image * batch length
-        print(f'Epoch {(i+1)}/{epochs}\nAccuracy: {trn_corr.item()*100/(total_images)/6:2.2f} %  Loss: {temp_loss_train:2.4f}  Duration: {((e_end-e_start)/60):.2f} minutes') # total_images = 4 images per batch * 8 augmentations per image * batch length
+        print(f'Epoch {i+1}/{epochs}')
+        print(f'Train Accuracy: {accuracy:2.2f}% Train Loss: {loss:2.4f}')
+        print(f'Duration: {hours:.0f}h:{minutes:.0f} minutes\n')
 
-        train_losses.append(temp_loss_train)
-        train_correct.append(trn_corr.item())
+        e_start = time.time()
 
-        X, y = None, None
+        accuracy, loss, _, _ = run_nn(model, valid_gen, criterion, optimizer, device, nn_modes.valid)
 
-        # contador de imageis totais
-        total_images = 0
+        e_end = time.time()
+        hours, minutes = divmod((e_end - e_start) / 60, 60)
 
-        # validate using validation generator
-        # do not perform any gradient updates while validation
-        model.eval()
-        loss = 0
-
-        with torch.no_grad():
-            for X, y in valid_gen:
-                # set label as cuda if device is cuda
-                X, y = X.to(device), y.to(device)
-
-                # forward pass image
-                y_val = model(X)
-
-                # get argmax of predicted tensor, which is our label
-                predicted = torch.sigmoid(y_val).data
-                predicted[predicted >= 0.5] = 1.0
-                predicted[predicted < 0.5] = 0
-
-                # increment test correct with correcly predicted labels per batch
-                val_corr += (predicted == y).sum()
-
-                # Contando imagens
-                total_images += y.shape[0]
-
-                # get loss of validation set
-                loss += criterion(y_val.float(), y).item() * X.size(0)
-
-        # média da loss, diferente do que está no notebook no drive
-        loss /= len(valid_gen.dataset)
-        # print validation metrics
-        print(f'Validation Accuracy {val_corr.item()*100/(total_images)/6:2.2f} % Validation Loss: {loss:2.4f}')
-        # logger.info(f'\n\nValidation Accuracy {tst_corr.item()*100/(total_images):2.2f} % Validation Loss: {loss.item():2.4f}\n')
+        print(f'Validation Accuracy {accuracy:2.2f}% Validation Loss: {loss:2.4f}')
+        print(f'Duration: {hours:.0f}h:{minutes:.0f} minutes\n')
 
         # Salvando o modelo com a melhor acurácia
-        acc = val_corr.item()*100/(total_images)/6
-        if acc >= max_acc and loss < saved_loss:
+        if accuracy >= max_acc and loss < saved_loss:
             torch.save(model.state_dict(), modelo_salvo) # TODO
-            # logger.info(f'\n\nSalvando modelo com acurácia {val_corr.item()*100/(total_images):2.2f} % e loss {loss:2.4f}\n em {modelo_salvo}\n\n')
-            print(f'\nSalvando modelo com acurácia {acc:2.2f} % e loss {loss:2.4f}\n em {modelo_salvo}\n')
-            max_acc = acc
+
+            print(f'\nSalvando modelo com acurácia {accuracy:2.2f}% e loss {loss:2.4f}\n em {modelo_salvo}\n')
+            max_acc = accuracy
             saved_loss = loss
 
         # some metrics storage for visualization
         valid_losses.append(loss)
-        valid_correct.append(val_corr.item())
+        valid_accs.append(accuracy)
 
     # set total training's end time
-    end_time = time.time() - start_time
+    hours, minutes = divmod((time.time() - start_time) / 60, 60)
 
     # print training summary
-    print(f"\nTraining Duration {(end_time/60):.2f} minutes")
-    # logger.info("\n\nTraining Duration {:.2f} minutes".format(end_time/60))
+    print(f'\nTotal Duration: {hours:.0f}h:{minutes:.0f} minutes\n')
 
     # Plot de loss
     plt.figure()
@@ -221,8 +229,8 @@ def train_valid(model, epochs,
 
     # Plot de acurácia
     plt.figure()
-    plt.plot([t*100/int(len(train_gen.dataset))/6 for t in train_correct], label='Training accuracy')
-    plt.plot([t*100/int(len(valid_gen.dataset))/6 for t in valid_correct], label='Validation accuracy')
+    plt.plot(train_accs, label='Training accuracy')
+    plt.plot(valid_accs, label='Validation accuracy')
     ax = plt.gca()
     ax.set(yticks=range(0, 100+1, 10))
     plt.title('Accuracy Metrics')
@@ -232,12 +240,12 @@ def train_valid(model, epochs,
     # plt.show()
     plt.savefig(f'{path_salvar_modelo}accuracy.png', bbox_inches='tight')
 
-def test(model,
-         test_gen,
-         criterion,
-         device,
-         path_salvar_modelo,
-         show_info=True):
+def test(model: models.ResNet,
+         test_gen: DataLoader[HemorrhageDataset],
+         criterion: nn.modules.loss._Loss,
+         device: torch.device,
+         path_salvar_modelo: str,
+         show_info: bool = True):
 
     # Local onde o modelo treinado foi salvo (assume-se que o nome é modelo.pt)
     pathlib_salvar_modelo = pathlib.Path(path_salvar_modelo)
@@ -249,65 +257,20 @@ def test(model,
     model.load_state_dict(torch.load(modelo_salvo))
 
     if show_info:
-        # logger.info("\n\nIniciando teste\n\n")
         print("\nIniciando teste\n")
 
-    # Modo de teste
-    model.eval()
-
-    loss = 0
-
-    # contador de imagens totais
-    total_images = 0
-
-    # Impede o cálculo de gradientes, poupa memória e tempo
-    with torch.no_grad():
-        correct = 0
-        labels = []
-        pred = []
-
-        # Teste
-        for X, y in test_gen:
-            # mandando imagens e labels para a gpu
-            X, y = X.to(device), y.to(device)
-
-            # Guardando os labels originais para visualizar a matriz de confusão
-            labels.append(y.data)
-
-            # Predict
-            y_val = model(X)
-
-            # get argmax of predicted values, which is our label
-            predicted = torch.sigmoid(y_val).data
-            predicted[predicted >= 0.5] = 1.0
-            predicted[predicted < 0.5] = 0
-            pred.append(predicted)
-
-            loss += criterion(y_val.float(), y).item() * X.size(0)
-
-            # número de acertos
-            correct += (predicted == y).sum()
-
-            # Contando imagens
-            total_images += y.shape[0]
-    loss /= len(test_gen.dataset)
+    accuracy, loss, original_labels, predicted_labels = run_nn(model, test_gen, criterion, None, device, nn_modes.test)
 
     if show_info:
-
-        # logger.info(f"Test Loss: {loss:.4f}")
-        # logger.info(f'Test accuracy: {correct.item()*100/(total_images):.2f}%')
         print(f"Test Loss: {loss:.4f}")
-        print(f'Test accuracy: {correct.item()*100/(total_images)/6:.2f}%')
+        print(f'Test accuracy: {accuracy:.2f}%')
 
         # Convert list of tensors to tensors -> Para usar nas estatísticas
-        labels = torch.cat(labels)
-        pred = torch.cat(pred)
+        labels = torch.cat(original_labels)
+        pred = torch.cat(predicted_labels)
 
         # Define ground-truth labels as a list
         LABELS = ['any', 'epidural', 'subdural', 'subarachnoid', 'intraventricular', 'intraparenchymal',]
-
-        # print(labels.cpu().squeeze())
-        # print(pred.cpu().squeeze())
 
         arr = multilabel_confusion_matrix(labels.cpu(), pred.cpu()) # corrigir no colab, essa linha estava errada, ytrue vem antes de ypred
         print(arr)
@@ -321,11 +284,5 @@ def test(model,
             plt.ylabel("Target")
             plt.savefig(f'{path_salvar_modelo}confusion_matrix_{lab}.png', bbox_inches='tight')
 
-
-
-        # plt.show()
-
-        # Print the classification report
-        # logger.info(f"Clasification Report\n\n{classification_report(pred.view(-1).cpu(), labels.view(-1).cpu())}") # TODO
-        print(f"Clasification Report\n\n{classification_report(pred.cpu(), labels.cpu())}") # TODO
-    return correct.item()*100/(total_images)/6, loss
+        print(f"Clasification Report\n\n{classification_report(pred.cpu(), labels.cpu())}")
+    return accuracy, loss

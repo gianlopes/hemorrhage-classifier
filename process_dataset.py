@@ -1,4 +1,6 @@
 import pathlib
+from typing import Union
+from xmlrpc.client import boolean
 import torch
 import torch.utils
 import torch.utils.data
@@ -10,9 +12,9 @@ import numpy as np
 # Função pode adicionar diferentes tipos de artefatos, dar resize nas imagens
 
 def process_dataset(data_path: pathlib.Path,
-                    fold_list: list,
+                    fold_list: list[int],
                     img_size:int = 256,
-                    funcao_geradora_artefato = None,
+                    funcao_geradora_artefato: Union[None, function] = None,
                     nivel_degradacao:int = 5,
                     nivel_aleatorio_teto:int = 10,
                     nivel_aleatorio:bool = False,
@@ -74,11 +76,11 @@ def process_dataset_train_valid_test(
     test_folds = list(range(8, 10))
 
     train_set = process_dataset(data_path, train_folds, img_size, funcao_geradora_artefato,
-                                nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=False, train=True)
+                                nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=True, train=True)
     valid_set = process_dataset(data_path, valid_folds, img_size, funcao_geradora_artefato,
-                                nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=False)
+                                nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=True)
     test_set = process_dataset(data_path, test_folds, img_size, funcao_geradora_artefato,
-                               nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=False)
+                               nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=True)
 
     return train_set, valid_set, test_set
 
@@ -88,12 +90,12 @@ def process_dataset_train_valid_test(
 # Esta opção pode tanto gerar undersampling quanto supersampling ao mesmo tempo
 
 
-def generate_dataloader(dataset,
-                        batch_size,
-                        balancear_dataset=True):
+def generate_dataloader(dataset: HemorrhageDataset,
+                        batch_size: int,
+                        balancear_dataset: bool = False):
     if not balancear_dataset:
         # num_workers=0 para evitar problemas do docker # , drop_last=True
-        gen = DataLoader(dataset, batch_size=batch_size, shuffle=True,
+        gen: DataLoader[HemorrhageDataset] = DataLoader(dataset, batch_size=batch_size, shuffle=True,
                          pin_memory=True, num_workers=0, drop_last=True)
         return gen
 
