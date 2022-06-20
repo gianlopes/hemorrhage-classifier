@@ -1,5 +1,6 @@
 from contextlib import nullcontext
 import pathlib
+import pickle
 import time
 from tokenize import String
 from typing import Union
@@ -300,7 +301,8 @@ def test(model: models.ResNet,
         print(f"Clasification Report\n\n{classification_report(pred.cpu(), labels.cpu())}")
     
     df = pd.DataFrame(model2_data)
-    path_to_save_df = pathlib_salvar_modelo / "modelo_data.csv"
-    df.to_csv(path_to_save_df, index=False)
+    path_to_save_df = pathlib_salvar_modelo / "model_results.pkl"
+    with open(path_to_save_df, 'wb') as f:
+        pickle.dump(df, f)
 
     return accuracy, loss
