@@ -1,5 +1,5 @@
 import pathlib
-from typing import Union
+from typing import Any, Callable, Union
 from xmlrpc.client import boolean
 import torch
 import torch.utils
@@ -14,7 +14,7 @@ import numpy as np
 def process_dataset(data_path: pathlib.Path,
                     fold_list: list[int],
                     img_size:int = 256,
-                    funcao_geradora_artefato: Union[None, function] = None,
+                    funcao_geradora_artefato: Union[None, Callable[[Any], Any]] = None,
                     nivel_degradacao:int = 5,
                     nivel_aleatorio_teto:int = 10,
                     nivel_aleatorio:bool = False,
