@@ -11,7 +11,7 @@ def main():
     # Escolhendo o device para realizar treino/teste
     if torch.cuda.is_available():
         # device_name = "cuda" # colab
-        device_name = "cuda:0" # servidor
+        device_name = "cuda:1" # servidor
     else:
         device_name = "cpu"
     device = torch.device(device_name)
@@ -29,12 +29,13 @@ def main():
     dataset_path = "/mnt/nas/GianlucasLopes/hemorragia/rsna-intracranial-hemorrhage-detection/"
     
     #Treino sem degradação
-    path_salvar_modelo = "./resultados/treino_8_6/"
+    path_salvar_modelo = "./resultados/treino_7_3/"
     train_test_full(device = device,
                     epochs = 8,
                     dataset_path = dataset_path,
                     path_salvar_modelo = path_salvar_modelo,
-                    img_size = img_size)
+                    img_size = img_size,
+                    path_salvar_resultado="./resultados/test_results/")
 
 
 def train_test_full(device,
@@ -47,7 +48,8 @@ def train_test_full(device,
                     nivel_aleatorio_teto = 10,
                     epochs = 15,
                     balancear_dataset = False,
-                    shuffle_pacientes_flag = False):
+                    shuffle_pacientes_flag = False,
+                    path_salvar_resultado = "./resultados/test_results/",):
     """
     Código usado para usar um artefato e um nível de degradação específico na fase
     de treino (validação também).
@@ -107,6 +109,7 @@ def train_test_full(device,
     test(model, gen,
          criterion, device,
          path_salvar_modelo,
+         path_salvar_resultado,
          True)
 
     plt.close('all')

@@ -129,7 +129,7 @@ def filter_df_by_label(df, label: str):
 class HemorrhageBaseDataset(torch.utils.data.Dataset):
     def __init__(self, data_path: pathlib.Path, fold_list: list, balance:bool = False):
         self.data_path = data_path
-        input_df_path = self.data_path / 'folds_df.pkl'
+        input_df_path = self.data_path / 'test_folds_df.pkl'
         with open(input_df_path, 'rb') as f:
             df = pickle.load(f)
 

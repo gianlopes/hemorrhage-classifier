@@ -259,13 +259,16 @@ def test(model: models.ResNet,
          criterion: nn.modules.loss._Loss,
          device: torch.device,
          path_salvar_modelo: str,
+         path_salvar_resultado: str,
          show_info: bool = True):
 
     # Local onde o modelo treinado foi salvo (assume-se que o nome é modelo.pt)
     pathlib_salvar_modelo = pathlib.Path(path_salvar_modelo)
+    pathlib_salvar_resultado = pathlib.Path(path_salvar_resultado)
     modelo_salvo = pathlib_salvar_modelo / "modelo.pt"
     # Criando pasta caso não exista
     pathlib_salvar_modelo.mkdir(parents=True, exist_ok=True)
+    pathlib_salvar_resultado.mkdir(parents=True, exist_ok=True)
 
     # Carregando o modelo salvo
     model.load_state_dict(torch.load(modelo_salvo))
@@ -296,12 +299,12 @@ def test(model: models.ResNet,
             sns.heatmap(df_cm, annot=True, fmt="d", cmap='viridis')
             plt.xlabel("Prediction")
             plt.ylabel("Target")
-            plt.savefig(f'{path_salvar_modelo}confusion_matrix_{lab}.png', bbox_inches='tight')
+            plt.savefig(f'{pathlib_salvar_resultado}confusion_matrix_{lab}.png', bbox_inches='tight')
 
         print(f"Clasification Report\n\n{classification_report(pred.cpu(), labels.cpu())}")
     
     df = pd.DataFrame(model2_data)
-    path_to_save_df = pathlib_salvar_modelo / "model_results.pkl"
+    path_to_save_df = pathlib_salvar_resultado / "model_results.pkl"
     with open(path_to_save_df, 'wb') as f:
         pickle.dump(df, f)
 
