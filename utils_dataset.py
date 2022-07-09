@@ -158,7 +158,7 @@ class HemorrhageBaseDataset(torch.utils.data.Dataset):
         dicom_path = self.data_path / 'stage_2_test' / f'{df_row["ID"]}.dcm'
 
         # Ajustando window
-        dicom = dcm.dcmread(dicom_path)
+        dicom = dcm.dcmread(str(dicom_path))
         img = dicom.pixel_array
         img = misc.rescale_image(
             img, df_row.RescaleSlope, df_row.RescaleIntercept, df_row.BitsStored, df_row.PixelRepresentation)
