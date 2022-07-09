@@ -102,7 +102,7 @@ def train_test_full(device,
     folds = list(range(0, 10))
     data_path = pathlib.Path(dataset_path)
     dataset = process_dataset(data_path, folds, img_size, None,
-                               nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=True)
+                               nivel_degradacao, nivel_aleatorio_teto, nivel_aleatorio, augmentation=False, balance=False)
     gen = generate_dataloader(dataset, 40, balancear_dataset)
     model = import_nn(num_classes, device)
     criterion, optimizer = define_config(model, device)
